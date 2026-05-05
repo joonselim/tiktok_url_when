@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>tiktok · when was this JD uploaded?</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111;
+    --panel-2: #1a1a1a;
+    --line: #262626;
+    --text: #f1f1f1;
+    --muted: #777;
+    --cyan: #25f4ee;
+    --magenta: #fe2c55;
+    --green: #69f0ae;
+    --yellow: #ffd95a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  body {
+    min-height: 100vh;
+    padding: 28px 18px 80px;
+  }
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  /* ── glitchy title ── */
+  header {
+    margin-bottom: 4px;
+  }
+  .logo {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+    text-shadow:
+       2px  0 0 var(--magenta),
+      -2px  0 0 var(--cyan);
+    user-select: none;
+    line-height: 1.2;
+  }
+  .logo .accent { color: var(--cyan); text-shadow: none; font-weight: 400; }
+  .logo::after {
+    content: "_";
+    color: var(--cyan);
+    text-shadow: none;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  .tagline b { color: var(--cyan); font-weight: 500; }
+
+  hr.divider {
+    border: 0;
+    border-top: 1px dashed var(--line);
+    margin: 22px 0;
+  }
+
+  /* ── input ── */
+  .input-wrap {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--line);
+    background: #000;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(37, 244, 238, 0.15);
+  }
+  .prompt {
+    padding: 12px 4px 12px 14px;
+    color: var(--magenta);
+    user-select: none;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 12px 10px;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+  input[type="text"]::placeholder { color: #444; }
+  button.go {
+    padding: 0 22px;
+    background: var(--cyan);
+    color: #000;
+    border: 0;
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+  button.go:hover { background: var(--magenta); color: #fff; }
+  button.go:active { transform: translate(1px, 1px); }
+
+  .error {
+    color: var(--magenta);
+    font-size: 13px;
+    margin-top: 10px;
+    display: none;
+  }
+  .error.show { display: block; }
+  .error::before { content: "✗ "; }
+
+  /* ── result ── */
+  .result {
+    display: none;
+    margin-top: 22px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 22px;
+    position: relative;
+  }
+  .result.show { display: block; }
+  .result::before {
+    content: "RESULT";
+    position: absolute;
+    top: -9px;
+    left: 14px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-size: 10px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+  }
+  .big-rel {
+    font-size: 44px;
+    font-weight: 800;
+    color: var(--green);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .big-rel.future { color: var(--yellow); }
+  .ago-context {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 6px 18px;
+    font-size: 13px;
+  }
+  .meta .k { color: var(--muted); }
+  .meta .v { color: var(--text); word-break: break-all; }
+  .meta .v.id { color: var(--cyan); }
+  .meta .v .empty-title { color: var(--muted); font-style: italic; }
+  .meta .v .fetch-fail { color: var(--magenta); font-style: italic; font-size: 12px; }
+
+  /* ── records section ── */
+  .records-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 30px 0 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .records-head h2 {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin: 0;
+    font-weight: 500;
+  }
+  .records-head h2 .count {
+    color: var(--cyan);
+    margin-left: 6px;
+  }
+  .records-head .actions {
+    display: flex;
+    gap: 8px;
+  }
+  .ghost-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .ghost-btn.warn:hover { border-color: var(--magenta); color: var(--magenta); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+  }
+  tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  tbody tr:hover { background: var(--panel-2); }
+  tbody tr.just-added {
+    background: rgba(37, 244, 238, 0.10);
+    box-shadow: inset 3px 0 0 var(--cyan);
+    animation: just-added-pulse 1.6s ease-out;
+  }
+  @keyframes just-added-pulse {
+    0%   { background: rgba(37, 244, 238, 0.40); }
+    100% { background: rgba(37, 244, 238, 0.10); }
+  }
+  tbody tr.just-added td:first-child::before {
+    content: "JUST ";
+    color: var(--cyan);
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+  td.id-cell {
+    color: var(--cyan);
+    white-space: nowrap;
+    font-size: 11px;
+  }
+  td.title-cell {
+    color: var(--text);
+    max-width: 320px;
+  }
+  td.title-cell .empty { color: #444; font-style: italic; }
+  td.date-cell {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  td.rel-cell {
+    color: var(--green);
+    white-space: nowrap;
+  }
+  td.rel-cell.old { color: var(--muted); }
+  td.action-cell { text-align: right; }
+  td.action-cell a {
+    color: var(--magenta);
+    text-decoration: none;
+    font-size: 11px;
+  }
+  td.action-cell a:hover { text-decoration: underline; }
+
+  .table-wrap {
+    border: 1px solid var(--line);
+    max-height: 540px;
+    overflow: auto;
+  }
+
+  /* ── snowflake math section ── */
+  .math-block {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 24px 24px 8px;
+  }
+  .math-step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .math-step.caveat { margin-bottom: 6px; }
+  .math-step .step-num {
+    flex-shrink: 0;
+    width: 32px;
+    color: var(--magenta);
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    font-size: 12px;
+    padding-top: 1px;
+  }
+  .math-step .step-body { flex: 1; min-width: 0; }
+  .math-step .step-title {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 13.5px;
+    margin-bottom: 8px;
+  }
+  .math-step pre {
+    margin: 8px 0;
+    padding: 12px 14px;
+    background: #000;
+    border: 1px solid var(--line);
+    font-size: 11.5px;
+    color: #b0b0b0;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.55;
+  }
+  .math-step pre.diagram { color: var(--muted); }
+  .math-step pre .hi-cyan    { color: var(--cyan); }
+  .math-step pre .hi-magenta { color: var(--magenta); font-weight: 600; }
+  .math-step pre .hi-id      { color: var(--cyan); font-weight: 600; }
+  .math-step .note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 6px;
+  }
+  .math-step .note em { color: var(--text); font-style: normal; }
+  .math-step .note code {
+    background: #000;
+    padding: 1px 6px;
+    color: var(--cyan);
+    font-size: 11px;
+  }
+  .math-step.caveat .step-num { color: var(--yellow); }
+  .math-step.caveat .note strong { color: var(--yellow); }
+
+  .footer-note {
+    margin-top: 30px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+  }
+  .footer-note code {
+    background: var(--panel);
+    padding: 1px 6px;
+    color: var(--cyan);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--cyan);
+    color: #000;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="logo">tiktok <span class="accent">·</span> when was this JD uploaded?</div>
+    <div class="tagline">
+      Paste a <b>lifeattiktok.com</b> URL or a 19-digit URL ID — get the estimated post time.
+    </div>
+  </header>
+
+  <hr class="divider" />
+
+  <div class="input-wrap">
+    <span class="prompt">▸</span>
+    <input
+      id="input"
+      type="text"
+      placeholder="https://lifeattiktok.com/search/7636024964612770101  or  19-digit ID"
+      autocomplete="off"
+      autofocus
+    />
+    <button class="go" id="decode-btn">DECODE</button>
+  </div>
+  <div class="error" id="error"></div>
+
+  <section class="result" id="result">
+    <div class="big-rel" id="relative">—</div>
+    <div class="ago-context" id="ago-context"></div>
+    <div class="meta">
+      <div class="k">URL ID</div>             <div class="v id" id="r-id"></div>
+      <div class="k">title</div>              <div class="v" id="r-title"><span class="empty-title">(fetching…)</span></div>
+      <div class="k">posted (Pacific)</div>   <div class="v" id="r-pt"></div>
+      <div class="k">posted (KST)</div>       <div class="v" id="r-kst"></div>
+      <div class="k">posted (UTC)</div>       <div class="v" id="r-utc"></div>
+    </div>
+  </section>
+
+  <div class="records-head">
+    <h2>RECORDS<span class="count" id="record-count">0</span></h2>
+    <div class="actions">
+      <button class="ghost-btn" id="export-btn">↓ download CSV</button>
+      <button class="ghost-btn warn" id="clear-btn">clear new entries</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 220px">URL ID</th>
+          <th>TITLE</th>
+          <th style="width: 130px">PT date</th>
+          <th style="width: 110px">posted</th>
+          <th style="width: 50px"></th>
+        </tr>
+      </thead>
+      <tbody id="records-body"></tbody>
+    </table>
+  </div>
+
+  <div class="records-head" style="margin-top: 36px">
+    <h2>SNOWFLAKE MATH<span class="count" style="font-size:11px;letter-spacing:0;color:var(--muted)">// how this is computed</span></h2>
+  </div>
+
+  <div class="math-block">
+
+    <div class="math-step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-title">URL ID is a Snowflake-style 64-bit integer</div>
+<pre class="diagram"> ┌──────┬────────────────────────┬──────────┬──────────┐
+ │ 1 b  │  ~41 bits   timestamp  │ ~10 bits │ ~12 bits │
+ │ sign │           (ms)         │ machine  │ sequence │
+ └──────┴────────────────────────┴──────────┴──────────┘
+                                 └─────── 22 bits ─────┘
+                                    (drop via >> 22)</pre>
+        <div class="note">
+          The lower 22 bits identify <em>which server</em> and <em>which sequence number</em>
+          generated the ID — noise to us. We only want the timestamp, so we right-shift them off:
+          <code>id &gt;&gt; 22</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="math-step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-title">ByteDance's epoch is private — so we calibrate</div>
+        <div class="note">
+          Twitter's Snowflake uses <code>2010-11-04</code> as epoch. ByteDance picked a different
+          anchor and never published it, so the raw timestamp bits are an opaque counter. The fix:
+          anchor to <em>one</em> ID whose true post time is already known, then express every other
+          ID relative to it.
+        </div>
+<pre class="formula">REFERENCE_ID    = <span class="hi-id" id="cal-id"></span>
+REFERENCE_TIME  = 2026-04-30 03:00 PT  (= <span class="hi-cyan">2026-04-30 10:00 UTC</span>)</pre>
+      </div>
+    </div>
+
+    <div class="math-step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-title">Decoding any other ID is just subtraction</div>
+<pre class="formula">ms_diff     = (REFERENCE_ID − target_id) >> 22
+posted_utc  = REFERENCE_TIME − ms_diff   (in milliseconds)</pre>
+        <div class="note">
+          The same 22-bit shift kills the noise from <em>both</em> IDs symmetrically — what's left
+          is purely a duration in milliseconds.
+        </div>
+      </div>
+    </div>
+
+    <div class="math-step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <div class="step-title">Worked example with target_id = <code id="ex-target-inline" style="color:var(--cyan)"></code></div>
+<pre class="formula">raw_diff = REFERENCE_ID − target_id
+         = 7634297575580092677 − <span id="ex-target"></span>
+         = <span class="hi-cyan" id="ex-rawdiff"></span>
+
+ms_diff  = raw_diff >> 22                       (2^22 = 4,194,304)
+         = <span class="hi-cyan" id="ex-msdiff"></span> ms
+         ≈ <span class="hi-cyan" id="ex-days"></span> days
+
+posted   = 2026-04-30 10:00 UTC − <span id="ex-days-2"></span> days
+         = <span class="hi-magenta" id="ex-posted-utc"></span> UTC
+         = <span class="hi-magenta" id="ex-posted-pt"></span> PT</pre>
+        <div class="note">
+          ↑ Compare against the row in records above — it's the same number arrived at the same way.
+        </div>
+      </div>
+    </div>
+
+    <div class="math-step caveat">
+      <div class="step-num">!</div>
+      <div class="step-body">
+        <div class="note">
+          <strong>caveat.</strong> The 22-bit split is inferred from Twitter's Snowflake — ByteDance
+          may use a slightly different layout. ±10–20% drift on the timestamp window is plausible.
+          Day-level estimates hold up; hour/minute precision shouldn't be trusted. If ByteDance
+          rotates their ID scheme, the calibration breaks and everything reads as the future or
+          ancient past — that's the signal to pick a fresh reference.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    <strong style="color:#aaa">Title fetch.</strong>
+    On lookup, the page is fetched via <code>r.jina.ai</code> (CORS proxy, free) to extract
+    the JD title. Falls back to <code>allorigins.win</code>. Both are public services — if
+    privacy matters, skip the fetch.<br>
+    <strong style="color:#aaa">CSV.</strong>
+    Existing records are baked in. New lookups (with auto-fetched titles) are saved to
+    your browser's localStorage — hit <code>↓ download CSV</code> to grab an updated file.
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Calibration ─────────────────────────────────────────
+  const REFERENCE_ID = 7634297575580092677n;
+  // 2026-04-30 03:00 Pacific (PDT, UTC-7) → 10:00 UTC
+  const REFERENCE_TIME_UTC_MS = Date.UTC(2026, 3, 30, 10, 0, 0);
+  const PT_OFFSET_HOURS = -7;
+  const SHIFT_BITS = 22n;
+  const STORAGE_KEY = 'tiktok_when_new_entries_v2';
+  // ─────────────────────────────────────────────────────────
+
+  // ── Embedded records (from tiktok_jobs.csv) ────────────
+  const SEED_RECORDS = [
+    { url_id: '7636024964612770101', job_title: 'Product Manager Project Intern (Brand Innovation - Monetization Product) - 2026 Start (BS/MS)' },
+    { url_id: '7634297575580092677', job_title: 'Program Operations Content Programs Project Intern (TikTok-Operations-Entertainment-Global Programs) - 2026 Start (BS/MS)' },
+    { url_id: '7634027348048709941', job_title: 'Product Manager Project Intern (Ads Interface and Platform) - 2026 Start (BS/MS)' },
+    { url_id: '7633609553186244917', job_title: 'Product Solutions and Operations Project Intern (Content and Service Ads - Search Ads) - 2026 Start (BS/MS)' },
+    { url_id: '7633608237116393781', job_title: 'Product Solutions and Operations Project Intern (Content and Service Ads - Search Ads) - 2026 Start (BS/MS)' },
+    { url_id: '7633323482907248949', job_title: '' },
+    { url_id: '7632474163383765301', job_title: 'Product Manager Project Intern (Brand Advertising - Monetization Product) - 2026 Start (BS/MS)' },
+    { url_id: '7632085581813827845', job_title: '' },
+    { url_id: '7631664921580226821', job_title: '' },
+    { url_id: '7631289371915864373', job_title: 'Entertainment Partnerships and Operations Project Intern' },
+    { url_id: '7630970740028590389', job_title: 'Emerging Verticals Creator Programs Operations Project Intern (TikTok-Operations-AMS) - 2026 Start (BS/MS)' },
+    { url_id: '7630679789166397749', job_title: 'Entertainment Content Project Intern (TikTok Operations)' },
+    { url_id: '7629263130820872501', job_title: '' },
+    { url_id: '7625929879091300613', job_title: 'Special Project Strategist Intern (TikTok Shop - Operations) - 2026 Summer (BS/ MS)' },
+    { url_id: '7623941412230727941', job_title: 'Category Manager Project Intern (TikTok Shop - Fashion)' },
+    { url_id: '7616572882755750149', job_title: '' },
+    { url_id: '7605201517163383093', job_title: '' },
+    { url_id: '7603170236103870773', job_title: '' },
+    { url_id: '7566369771879958789', job_title: 'Product Strategist Intern [Global Monetization Product and Technology] - 2026 Summer (MBA)' },
+    { url_id: '7558689094139021586', job_title: '' },
+    { url_id: '7558688173032081682', job_title: '' },
+    { url_id: '7558688157182118162', job_title: '' },
+    { url_id: '7558688155957987591', job_title: '' },
+    { url_id: '7558685003706681607', job_title: '' },
+    { url_id: '7558685000612350216', job_title: '' },
+    { url_id: '7558680709565532423', job_title: '' },
+    { url_id: '7558680709381523720', job_title: '' },
+    { url_id: '7558676459792304392', job_title: '' },
+    { url_id: '7545748758039218440', job_title: '' },
+    { url_id: '7544150366742497554', job_title: '' },
+    { url_id: '7544147442612455688', job_title: '' },
+    { url_id: '7544146413857556754', job_title: '' },
+    { url_id: '7544146412490934535', job_title: '' },
+    { url_id: '7544141810042702087', job_title: '' },
+    { url_id: '7544139637230110984', job_title: '' },
+    { url_id: '7532382628306962696', job_title: '' },
+    { url_id: '7532382059622074631', job_title: '' },
+    { url_id: '7532380611958769927', job_title: '' },
+    { url_id: '7532187133094054162', job_title: '' },
+    { url_id: '7486252250214467848', job_title: '' },
+  ];
+
+  document.getElementById('cal-id').textContent = REFERENCE_ID.toString();
+
+  // ── Core decoder ────────────────────────────────────────
+  function parseInput(raw) {
+    raw = raw.trim();
+    if (!raw) throw new Error('Please enter a value.');
+    if (raw.includes('lifeattiktok.com')) {
+      raw = raw.split('/search/').pop().split('?')[0].split('/')[0].split('#')[0].trim();
+    }
+    if (!/^\d{15,25}$/.test(raw)) {
+      throw new Error(`Not a valid URL ID: ${raw}`);
+    }
+    return BigInt(raw);
+  }
+
+  function decode(jobId) {
+    const diff = REFERENCE_ID - jobId;
+    const neg = diff < 0n;
+    const absMs = (neg ? -diff : diff) >> SHIFT_BITS;
+    const msFromRef = neg ? -Number(absMs) : Number(absMs);
+    const postedUtcMs = REFERENCE_TIME_UTC_MS - msFromRef;
+    return new Date(postedUtcMs);
+  }
+
+  // ── Formatting ─────────────────────────────────────────
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function fmtWithOffset(date, offsetH) {
+    const d = new Date(date.getTime() + offsetH * 3600 * 1000);
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} `
+         + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+  const fmtPT  = (d) => fmtWithOffset(d, PT_OFFSET_HOURS);
+  const fmtKST = (d) => fmtWithOffset(d, 9);
+  const fmtUTC = (d) => fmtWithOffset(d, 0);
+
+  function formatRelative(postedDate, nowDate = new Date()) {
+    const diffMs = nowDate.getTime() - postedDate.getTime();
+    const future = diffMs < 0;
+    const abs = Math.abs(diffMs);
+    const min = abs / 60000;
+    const hr  = abs / 3600000;
+    const day = abs / 86400000;
+
+    let core;
+    if (min < 1)        core = `${Math.round(abs / 1000)}s`;
+    else if (min < 60)  core = `${Math.round(min)} min`;
+    else if (hr < 24)   core = `${hr.toFixed(1)} hours`;
+    else if (day < 14)  core = `${day.toFixed(1)} days`;
+    else if (day < 60)  core = `${Math.round(day)} days (${(day/7).toFixed(1)} wks)`;
+    else if (day < 720) core = `${Math.round(day)} days (${(day/30).toFixed(1)} mo)`;
+    else                core = `${(day/365).toFixed(1)} years`;
+
+    return future ? `${core} from now` : `${core} ago`;
+  }
+
+  // ── Title auto-fetch (via Jina Reader CORS proxy) ──────
+  function cleanTitle(s) {
+    return s
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\s*[-|·–—]\s*(TikTok|Life at TikTok|lifeattiktok\.com|Careers).*$/i, '')
+      .replace(/^Job\s*[-:]\s*/i, '')
+      .trim();
+  }
+
+  function extractTitleFromJina(text) {
+    const titleLine = text.match(/^Title:\s*(.+)$/m);
+    if (titleLine) {
+      const t = cleanTitle(titleLine[1]);
+      if (t && !/^(tiktok|life at tiktok|careers)$/i.test(t)) return t;
+    }
+    const h1 = text.match(/^#\s+(.+)$/m);
+    if (h1) {
+      const t = cleanTitle(h1[1]);
+      if (t) return t;
+    }
+    return null;
+  }
+
+  async function fetchJobTitle(jobId) {
+    const targetUrl = `https://lifeattiktok.com/search/${jobId}`;
+    try {
+      const r = await fetch(`https://r.jina.ai/${targetUrl}`, {
+        headers: { 'Accept': 'text/plain' },
+      });
+      if (r.ok) {
+        const text = await r.text();
+        const title = extractTitleFromJina(text);
+        if (title) return title;
+      }
+    } catch (e) { /* fall through */ }
+
+    // Fallback: allorigins (raw HTML, parse <title>)
+    try {
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`);
+      if (r.ok) {
+        const html = await r.text();
+        const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        if (m) {
+          const t = cleanTitle(m[1]);
+          if (t) return t;
+        }
+      }
+    } catch (e) { /* give up */ }
+
+    return null;
+  }
+
+  // ── CSV export ─────────────────────────────────────────
+  function toCSV(records) {
+    const header = ['rank','url_id','job_title','url','posted_pt','days_ago','approx_label'];
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const sorted = [...records].sort((a, b) => {
+      const ai = BigInt(a.url_id), bi = BigInt(b.url_id);
+      return ai > bi ? -1 : ai < bi ? 1 : 0;
+    });
+    const now = new Date();
+    const lines = [header.join(',')];
+    sorted.forEach((r, i) => {
+      const posted = decode(BigInt(r.url_id));
+      const days = (now.getTime() - posted.getTime()) / 86400000;
+      const row = {
+        rank: i + 1,
+        url_id: r.url_id,
+        job_title: r.job_title || '',
+        url: `https://lifeattiktok.com/search/${r.url_id}`,
+        posted_pt: fmtPT(posted),
+        days_ago: days.toFixed(2),
+        approx_label: formatRelative(posted, now),
+      };
+      lines.push(header.map(h => esc(row[h])).join(','));
+    });
+    return lines.join('\n') + '\n';
+  }
+
+  // ── State ──────────────────────────────────────────────
+  let newEntries = [];   // user-added, persisted to localStorage
+
+  function loadNewEntries() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      newEntries = raw ? JSON.parse(raw) : [];
+    } catch { newEntries = []; }
+  }
+  function saveNewEntries() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newEntries));
+  }
+
+  function findRecord(jobId) {
+    const id = String(jobId);
+    return SEED_RECORDS.find(r => r.url_id === id)
+        || newEntries.find(r => r.url_id === id)
+        || null;
+  }
+
+  function addNewEntry(jobId) {
+    const id = String(jobId);
+    if (findRecord(id)) return false;
+    newEntries.push({ url_id: id, job_title: '' });
+    saveNewEntries();
+    return true;
+  }
+
+  function updateEntryTitle(jobId, title) {
+    const id = String(jobId);
+    // seed records: mutate in-memory copy (won't survive reload, but visible now)
+    const seed = SEED_RECORDS.find(r => r.url_id === id);
+    if (seed && !seed.job_title) seed.job_title = title;
+    // new entries: persist
+    const fresh = newEntries.find(r => r.url_id === id);
+    if (fresh) {
+      fresh.job_title = title;
+      saveNewEntries();
+    }
+  }
+
+  // ── UI rendering ───────────────────────────────────────
+  function render(jobId, postedDate, knownTitle) {
+    const rel = formatRelative(postedDate);
+    const isFuture = postedDate.getTime() > Date.now();
+    const relEl = document.getElementById('relative');
+    relEl.textContent = rel;
+    relEl.classList.toggle('future', isFuture);
+
+    const ctx = isFuture
+      ? '※ Estimate falls in the future — likely calibration drift or a new ID scheme.'
+      : `Compared against your local clock (${new Date().toLocaleString('en-US')}).`;
+    document.getElementById('ago-context').textContent = ctx;
+
+    document.getElementById('r-id').textContent = String(jobId);
+    setTitleDisplay(knownTitle); // null = "fetching…", '' = "(no title)", string = title
+    document.getElementById('r-pt').textContent = fmtPT(postedDate);
+    document.getElementById('r-kst').textContent = fmtKST(postedDate);
+    document.getElementById('r-utc').textContent = fmtUTC(postedDate);
+    document.getElementById('result').classList.add('show');
+  }
+
+  function setTitleDisplay(title) {
+    const el = document.getElementById('r-title');
+    if (title === null || title === undefined) {
+      el.innerHTML = '<span class="empty-title">fetching title…</span>';
+    } else if (title === '') {
+      el.innerHTML = '<span class="empty-title">(no title found)</span>';
+    } else if (title === '__FAIL__') {
+      el.innerHTML = '<span class="fetch-fail">title fetch failed — CORS or network</span>';
+    } else {
+      el.textContent = title;
+    }
+  }
+
+  function renderRecords(highlightId) {
+    const all = [...SEED_RECORDS, ...newEntries];
+    all.sort((a, b) => {
+      const ai = BigInt(a.url_id), bi = BigInt(b.url_id);
+      return ai > bi ? -1 : ai < bi ? 1 : 0;
+    });
+    document.getElementById('record-count').textContent = all.length;
+
+    const tbody = document.getElementById('records-body');
+    tbody.innerHTML = '';
+    const now = new Date();
+    let highlightRow = null;
+    all.forEach(r => {
+      const posted = decode(BigInt(r.url_id));
+      const rel = formatRelative(posted, now);
+      const days = (now.getTime() - posted.getTime()) / 86400000;
+      const tr = document.createElement('tr');
+      if (highlightId && r.url_id === highlightId) {
+        tr.classList.add('just-added');
+        highlightRow = tr;
+      }
+      tr.innerHTML = `
+        <td class="id-cell">${r.url_id}</td>
+        <td class="title-cell">${r.job_title ? escapeHtml(r.job_title) : '<span class="empty">(no title)</span>'}</td>
+        <td class="date-cell">${fmtPT(posted)}</td>
+        <td class="rel-cell ${days > 14 ? 'old' : ''}">${rel}</td>
+        <td class="action-cell"><a href="https://lifeattiktok.com/search/${r.url_id}" target="_blank" rel="noopener">↗</a></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (highlightRow) {
+      // re-trigger animation if same row was already highlighted
+      highlightRow.style.animation = 'none';
+      void highlightRow.offsetWidth;
+      highlightRow.style.animation = '';
+      highlightRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  // ── Toast ──────────────────────────────────────────────
+  let toastTimer = null;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // ── Actions ────────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('error');
+    el.textContent = msg;
+    el.classList.add('show');
+    document.getElementById('result').classList.remove('show');
+  }
+  function hideError() {
+    document.getElementById('error').classList.remove('show');
+  }
+
+  async function run() {
+    hideError();
+    const raw = document.getElementById('input').value;
+    let jobId;
+    try { jobId = parseInput(raw); }
+    catch (e) { showError(e.message); return; }
+
+    const posted = decode(jobId);
+    const id = String(jobId);
+    const existing = findRecord(id);
+    const knownTitle = existing && existing.job_title ? existing.job_title : null;
+
+    render(jobId, posted, knownTitle);
+
+    const added = addNewEntry(id);
+    renderRecords(id);
+    toast(added ? '+ saved to records' : 'already in records');
+
+    if (knownTitle) return; // already have it
+
+    // async title fetch
+    setTitleDisplay(null);
+    let title = null;
+    try { title = await fetchJobTitle(id); }
+    catch (e) { title = null; }
+
+    if (title) {
+      updateEntryTitle(id, title);
+      setTitleDisplay(title);
+      renderRecords(id);
+      toast('+ title fetched');
+    } else {
+      setTitleDisplay('__FAIL__');
+    }
+  }
+
+  function downloadCSV() {
+    const all = [...SEED_RECORDS, ...newEntries];
+    const csv = toCSV(all);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tiktok_jobs.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast(`downloaded ${all.length} rows`);
+  }
+
+  function clearNew() {
+    if (!newEntries.length) { toast('nothing to clear'); return; }
+    if (!confirm(`Clear ${newEntries.length} new entr${newEntries.length === 1 ? 'y' : 'ies'} from local storage?\n(Seed records are not affected.)`)) return;
+    newEntries = [];
+    saveNewEntries();
+    renderRecords();
+    toast('cleared');
+  }
+
+  // ── Wire up ────────────────────────────────────────────
+  document.getElementById('decode-btn').addEventListener('click', run);
+  document.getElementById('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') run();
+  });
+  document.getElementById('export-btn').addEventListener('click', downloadCSV);
+  document.getElementById('clear-btn').addEventListener('click', clearNew);
+
+  // ── Fill the Worked Example with live computed values ──
+  function withCommas(bigOrNum) {
+    return bigOrNum.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  (function fillWorkedExample() {
+    const exId = 7625929879091300613n;          // matches a row in records
+    const rawDiff = REFERENCE_ID - exId;
+    const msDiff  = rawDiff >> SHIFT_BITS;
+    const days    = Number(msDiff) / 86400000;
+    const posted  = decode(exId);
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('ex-target',         exId.toString());
+    set('ex-target-inline',  exId.toString());
+    set('ex-rawdiff',        withCommas(rawDiff));
+    set('ex-msdiff',         withCommas(msDiff));
+    set('ex-days',           days.toFixed(2));
+    set('ex-days-2',         days.toFixed(2));
+    set('ex-posted-utc',     fmtUTC(posted));
+    set('ex-posted-pt',      fmtPT(posted));
+  })();
+
+  // ── Boot ───────────────────────────────────────────────
+  loadNewEntries();
+  renderRecords();
+
+  // URL hash auto-decode: index.html#7603879407275444533
+  if (location.hash.length > 1) {
+    document.getElementById('input').value = decodeURIComponent(location.hash.slice(1));
+    run();
+  }
+</script>
+</body>
+</html>
