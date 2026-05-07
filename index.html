@@ -559,6 +559,7 @@ posted   = 2026-04-30 10:00 UTC − <span id="ex-days-2"></span> days
   // ── Embedded records (from tiktok_jobs.csv) ────────────
   const SEED_RECORDS = [
     { url_id: '7636438439764920629', job_title: 'News Partnerships and Operations Project Intern (TikTok-Operations-News) - 2026 Start (BS/MS)' },
+    { url_id: '7636408469473741109', job_title: 'Seller Acquisition Project Intern (TikTok Shop - MAI EU), 2026 Start (BS/MS)' },
     { url_id: '7636104027887372549', job_title: 'TikTok Shop Partner Manager Project Intern (TikTok Shop - US Operation) - 2026 Start (BS/MS)' },
     { url_id: '7636100822318369029', job_title: 'Global Sports Strategy and Operations Project Intern (TikTok-Operations-Sports Creators and Athletes) - 2026 Start (MBA)' },
     { url_id: '7636024964612770101', job_title: 'Product Manager Project Intern (Brand Innovation - Monetization Product) - 2026 Start (BS/MS)' },
@@ -597,6 +598,7 @@ posted   = 2026-04-30 10:00 UTC − <span id="ex-days-2"></span> days
     { url_id: '7544146412490934535', job_title: '' },
     { url_id: '7544141810042702087', job_title: '' },
     { url_id: '7544139637230110984', job_title: '' },
+    { url_id: '7533148570179209479', job_title: 'AI Creative Designer Intern [TikTok-Design-Effect]- 2026 Summer (BS/MS)' },
     { url_id: '7532382628306962696', job_title: '' },
     { url_id: '7532382059622074631', job_title: '' },
     { url_id: '7532380611958769927', job_title: '' },
@@ -611,7 +613,13 @@ posted   = 2026-04-30 10:00 UTC − <span id="ex-days-2"></span> days
     raw = raw.trim();
     if (!raw) throw new Error('Please enter a value.');
     if (raw.includes('lifeattiktok.com')) {
-      raw = raw.split('/search/').pop().split('?')[0].split('/')[0].split('#')[0].trim();
+      // strip query / hash first so ?token=... or ?spread=... can't pollute the match,
+      // then extract the first 15-25 digit run from the path. Handles /search/{id},
+      // /search/{id}?spread=..., /referral/.../position/{id}/detail?token=..., and any
+      // markdown-link wrappers the user might paste.
+      const path = raw.split('?')[0].split('#')[0];
+      const m = path.match(/(\d{15,25})/);
+      if (m) raw = m[1];
     }
     if (!/^\d{15,25}$/.test(raw)) {
       throw new Error(`Not a valid URL ID: ${raw}`);
