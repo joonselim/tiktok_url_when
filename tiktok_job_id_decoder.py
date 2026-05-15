@@ -28,10 +28,12 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 # ---- Calibration ---------------------------------------------------------
-# Reference ID와 게시 시각. 더 최신의 신뢰할 수 있는 ID로 교체 가능.
-REFERENCE_ID = 7634297575580092677
-REFERENCE_TIME_PT = datetime(2026, 4, 30, 3, 0, 0)  # Pacific Time
-PT_OFFSET_HOURS = -7  # PDT (서머타임). PST이면 -8.
+# Reference ID와 게시 시각.
+# 검증: LinkedIn에서 "17시간 전" 표시로 확인 (2026-05-14 23:18 ET 시점 기준)
+# Job: Product Operations Project Intern Pangle (Advertisement Team) - 2026 Start (BS/MS)
+REFERENCE_ID = 7639514228211124533
+REFERENCE_TIME_PT = datetime(2026, 5, 14, 3, 18, 38)  # Pacific Time
+PT_OFFSET_HOURS = -7  # PDT (서머타임). PST(겨울)이면 -8.
 
 # Snowflake bit 분배 가정
 SEQUENCE_AND_MACHINE_BITS = 22
